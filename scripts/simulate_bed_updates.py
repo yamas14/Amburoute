@@ -35,6 +35,9 @@ class Config:
     MAX_BED_CHANGE = 3
     MAX_ICU_CHANGE = 2
     
+    # Auto-discovery
+    AUTO_DISCOVER_HOSPITALS = True  # Set to False to only update HOSPITAL_IDS
+    
     # API credentials (if needed)
     API_KEY = os.getenv("AMBULANCE_API_KEY")
 
@@ -44,8 +47,25 @@ class BedUpdateRequest(BaseModel):
     new_count: int
     updated_by: str = "bed_simulator"
 
-def get_current_bed_counts(hospital_id: int) -> tuple[int, int]:
-    """Get current bed counts for a hospital."""
+def get_all_hospital_ids() -> List[int]:
+    """Fetch all hospital IDs from the backend."""
+    try:
+        with httpx.Client() as client:
+            response = client.get(
+                f"{Config.API_BASE_URL}/hospitals/",
+                headers={"Authorization": f"Bearer {Config.API_KEY}"} if Config.API_KEY else {}
+            )
+            response.raise_for_status()
+            hospitals = response.json()
+            return [h['id'] for h in hospitals if 'id' in h]
+    except Exception as e:
+        logger.error(f"Error fetching hospital list: {e}")
+        return []
+
+def get_current_bed_counts(hospital_id: int) -> tuple[int, int, int, int]:
+    """Get current bed counts and totals for a hospital.
+    Returns: (general_available, icu_available, general_total, icu_total)
+    """
     try:
         with httpx.Client() as client:
             response = client.get(
@@ -56,11 +76,13 @@ def get_current_bed_counts(hospital_id: int) -> tuple[int, int]:
             data = response.json()
             return (
                 data["general_beds"]["available"],
-                data["icu_beds"]["available"]
+                data["icu_beds"]["available"],
+                data["general_beds"]["total"],
+                data["icu_beds"]["total"]
             )
     except Exception as e:
         logger.error(f"Error getting current bed counts for hospital {hospital_id}: {e}")
-        return 0, 0
+        return 0, 0, 0, 0
 
 def update_bed_count(hospital_id: int, bed_type: str, new_count: int) -> bool:
     """Update bed count for a hospital."""
@@ -86,7 +108,14 @@ def update_bed_count(hospital_id: int, bed_type: str, new_count: int) -> bool:
 
 def simulate_bed_updates(hospital_ids: Optional[List[int]] = None):
     """Simulate bed updates for the specified hospitals."""
-    hospital_ids = hospital_ids or Config.HOSPITAL_IDS
+    if hospital_ids is None:
+        if Config.AUTO_DISCOVER_HOSPITALS:
+            hospital_ids = get_all_hospital_ids()
+            if not hospital_ids:
+                logger.warning("No hospitals found via auto-discovery, falling back to default IDs")
+                hospital_ids = Config.HOSPITAL_IDS
+        else:
+            hospital_ids = Config.HOSPITAL_IDS
     
     logger.info(f"Starting bed simulation for hospitals: {hospital_ids}")
     logger.info(f"Update interval: {Config.UPDATE_INTERVAL} seconds")
@@ -95,8 +124,8 @@ def simulate_bed_updates(hospital_ids: Optional[List[int]] = None):
         while True:
             for hospital_id in hospital_ids:
                 try:
-                    # Get current counts
-                    current_gen, current_icu = get_current_bed_counts(hospital_id)
+                    # Get current counts and totals
+                    current_gen, current_icu, total_gen, total_icu = get_current_bed_counts(hospital_id)
                     
                     # Skip if we couldn't get current counts
                     if current_gen == 0 and current_icu == 0:
@@ -107,9 +136,9 @@ def simulate_bed_updates(hospital_ids: Optional[List[int]] = None):
                     gen_change = random.randint(-Config.MAX_BED_CHANGE, Config.MAX_BED_CHANGE)
                     icu_change = random.randint(-Config.MAX_ICU_CHANGE, Config.MAX_ICU_CHANGE)
                     
-                    # Calculate new counts (ensure they don't go below 0)
-                    new_gen = max(0, current_gen + gen_change)
-                    new_icu = max(0, current_icu + icu_change)
+                    # Calculate new counts and clamp to [0, total]
+                    new_gen = min(max(0, current_gen + gen_change), total_gen or (current_gen + max(0, Config.MAX_BED_CHANGE)))
+                    new_icu = min(max(0, current_icu + icu_change), total_icu or (current_icu + max(0, Config.MAX_ICU_CHANGE)))
                     
                     # Update bed counts
                     if gen_change != 0:
@@ -134,6 +163,12 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description="Simulate real-time bed availability updates")
+    parser.add_argument(
+        "--no-auto-discover", 
+        action="store_false", 
+        dest="auto_discover",
+        help="Disable auto-discovery of hospitals and only update specified IDs"
+    )
     parser.add_argument("--hospitals", type=int, nargs="+", help="Hospital IDs to simulate")
     parser.add_argument("--interval", type=int, help="Update interval in seconds")
     parser.add_argument("--max-bed-change", type=int, help="Maximum change in general beds per update")
@@ -143,6 +178,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Update config from command line arguments
+    Config.AUTO_DISCOVER_HOSPITALS = args.auto_discover
     if args.hospitals:
         Config.HOSPITAL_IDS = args.hospitals
     if args.interval:
@@ -155,4 +191,4 @@ if __name__ == "__main__":
         Config.API_BASE_URL = args.api_url.rstrip('/')
     
     # Start simulation
-    simulate_bed_updates(Config.HOSPITAL_IDS)
+    simulate_bed_updates()

@@ -3,7 +3,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Depends, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, ConfigDict
 from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime, timedelta
 import logging
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # Import our modules
 from src.database.models import Hospital, BedAvailabilityUpdate, BedType, create_sample_data, HospitalSpecialty
 from src.database.database import init_db, get_session
-from api.bed_management import router as bed_router
+from .api.bed_management import router as bed_router
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -63,6 +63,9 @@ class HospitalResponse(BaseModel):
     specialties: List[str] = []
     distance_km: Optional[float]
     travel_time_min: Optional[float]
+    
+    # Pydantic v2 config
+    model_config = ConfigDict(from_attributes=True)
 
 class RouteResponse(BaseModel):
     distance: float  # meters
@@ -405,7 +408,25 @@ async def list_hospitals(
     if specialty:
         query = query.join(Hospital.specialties).filter(HospitalSpecialty.specialty.ilike(f"%{specialty}%"))
     
-    return query.offset(skip).limit(limit).all()
+    hospitals = query.offset(skip).limit(limit).all()
+    # Serialize to HospitalResponse shape with nested location
+    results = []
+    for h in hospitals:
+        results.append({
+            "id": h.id,
+            "name": h.name,
+            "location": {"lat": h.latitude, "lng": h.longitude},
+            "address": h.address,
+            "contact_number": h.contact_number,
+            "available_beds": h.available_beds,
+            "available_icu_beds": h.available_icu_beds,
+            "total_beds": h.total_beds,
+            "total_icu_beds": h.total_icu_beds,
+            "specialties": [s.specialty for s in h.specialties],
+            "distance_km": None,
+            "travel_time_min": None,
+        })
+    return results
 
 @app.get("/hospitals/{hospital_id}", response_model=HospitalResponse)
 async def get_hospital(hospital_id: int, db: Session = Depends(get_session)):
@@ -416,7 +437,20 @@ async def get_hospital(hospital_id: int, db: Session = Depends(get_session)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Hospital with ID {hospital_id} not found"
         )
-    return hospital
+    return {
+        "id": hospital.id,
+        "name": hospital.name,
+        "location": {"lat": hospital.latitude, "lng": hospital.longitude},
+        "address": hospital.address,
+        "contact_number": hospital.contact_number,
+        "available_beds": hospital.available_beds,
+        "available_icu_beds": hospital.available_icu_beds,
+        "total_beds": hospital.total_beds,
+        "total_icu_beds": hospital.total_icu_beds,
+        "specialties": [s.specialty for s in hospital.specialties],
+        "distance_km": None,
+        "travel_time_min": None,
+    }
 
 if __name__ == "__main__":
     # Run the FastAPI application

@@ -17,13 +17,15 @@ class MapboxRouter:
     
     def __init__(self, access_token: str):
         self.access_token = access_token
-        self.base_url = "https://api.mapbox.com/directions/v5/mapbox/driving-traffic"
-        self.matrix_url = "https://api.mapbox.com/directions-matrix/v1/mapbox/driving-traffic"
+        # Base endpoints (profile appended per request)
+        self.base_url_root = "https://api.mapbox.com/directions/v5/mapbox"
+        self.matrix_url_root = "https://api.mapbox.com/directions-matrix/v1/mapbox"
         self.session = requests.Session()
         
     def get_route(self, 
                  origin: Tuple[float, float], 
-                 destination: Tuple[float, float]) -> Dict:
+                 destination: Tuple[float, float],
+                 profile: str = "driving-traffic") -> Dict:
         """
         Get route with real-time traffic data between two points.
         
@@ -48,7 +50,7 @@ class MapboxRouter:
         
         try:
             response = self.session.get(
-                f"{self.base_url}/{coordinates}",
+                f"{self.base_url_root}/{profile}/{coordinates}",
                 params=params,
                 timeout=10
             )
