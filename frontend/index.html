@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbuRoute - Smart Ambulance Routing</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="map"></div>
+    <div id="dashboard">
+        <h1>AmbuRoute</h1>
+        <div id="selected-hospital">
+            <h2>Selected Hospital</h2>
+            <p><strong>Name:</strong> <span id="hospital-name">N/A</span></p>
+            <p><strong>ETA:</strong> <span id="hospital-eta">N/A</span></p>
+            <p><strong>Available Beds:</strong> <span id="hospital-beds">N/A</span></p>
+            <p><strong>Available ICU Beds:</strong> <span id="hospital-icu-beds">N/A</span></p>
+            <p><strong>Hospitals Loaded:</strong> <span id="hospital-count">0</span></p>
+        </div>
+        <div id="hospital-list-panel">
+            <h3>Hospitals</h3>
+            <div id="hospital-list" style="max-height: 220px; overflow: auto; border: 1px solid #ddd; padding: 6px; background: #fff;">
+                <!-- Populated by main.js -->
+            </div>
+        </div>
+        <button id="start-emergency">Start Emergency</button>
+    </div>
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+    <script src="main.js"></script>
+</body>
+</html>
+
