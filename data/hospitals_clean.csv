@@ -1,0 +1,31 @@
+name,beds,address,ward,latitude,longitude,type
+Victoria Hospital,1000,"K.R. Road, Fort, Bengaluru, Karnataka 560002",Ward 126,12.961,77.573,city_center
+Bowring and Lady Curzon Hospital,800,"1, Lady Curzon Road, Shivajinagar, Bengaluru, Karnataka 560001",Ward 75,12.9765,77.5993,city_center
+Minto Eye Hospital,350,"Chamrajpet, Bengaluru, Karnataka 560004",Ward 125,12.96135,77.57334999999999,city_center
+Jayadeva Institute of Cardiovascular Sciences,1500,"Bannerghatta Road, Jayanagar 9th Block, Bengaluru 560069",Ward 148,12.8975,77.5946,multi_specialty
+NIMHANS,1200,"Hosur Road, Lakkasandra, Bengaluru 560029",Ward 150,12.943,77.5913,multi_specialty
+St. John's Medical College Hospital,1500,"Sarjapur Road, Koramangala, Bengaluru 560034",Ward 151,12.9348,77.6053,multi_specialty
+M.S. Ramaiah Memorial Hospital,1800,"MSRIT Post, MSR Nagar, Bengaluru 560054",Ward 16,13.0274,77.5622,multi_specialty
+Kidwai Memorial Institute of Oncology,600,"Dr. M.H. Marigowda Road, Hombegowda Nagar, Bengaluru 560029",Ward 151,12.943349999999999,77.59165,specialty
+HOSMAT Hospital,500,"45, Magrath Road, Ashok Nagar, Bengaluru 560025",Ward 148,12.971,77.585,specialty
+Manipal Hospital,800,"HAL Airport Road, Old Airport Road, Bengaluru 560017",Ward 68,12.9698,77.6412,private
+Fortis Hospital,400,"154/9, Bannerghatta Road, Opposite IIM-B, Bengaluru 560076",Ward 180,12.89785,77.59495,private
+Apollo Hospital,350,"154/11, Bannerghatta Road, Bengaluru 560076",Ward 180,12.8982,77.5953,private
+Columbia Asia Referral Hospital,150,"26/4, Brigade Gateway, Malleshwaram West, Bengaluru 560055",Ward 63,13.0115,77.5511,private
+Narayana Health City,5000,"Hosur Road, Bommasandra, Bengaluru 560099",Ward 47,12.8929,77.6633,high_capacity
+Sakra World Hospital,800,"52/2, 52/3, Devarabeesanahalli, Varthur Road, Bengaluru 560103",Ward 150,12.9348,77.6963,high_capacity
+BGS Global Hospital,700,"67, Uttarahalli Road, Kengeri, Bengaluru 560060",Ward 196,12.9076,77.5112,high_capacity
+Aster CMI Hospital,600,"43/2, New Airport Road, NH 44, Sahakara Nagar, Hebbal, Bengaluru 560092",Ward 16,13.0569,77.5986,high_capacity
+Whitefield Medicity,3500,"ITPL Road, Whitefield, Bengaluru 560066",Ward 87,12.9698,77.75,suburban
+Yelahanka Super Specialty Hospital,2800,"Yelahanka New Town, Bengaluru 560064",Ward 5,13.1,77.6,suburban
+Electronics City Medical Center,2200,"Hosur Main Road, Electronics City Phase 1, Bengaluru 560100",Ward 198,12.9716,77.6412,suburban
+Bangalore Heart & Lung Institute,1200,"Outer Ring Road, Marathahalli, Bengaluru 560037",Ward 80,12.9716,77.6963,specialty
+National Trauma Center,1800,"Hennur Main Road, Kalyan Nagar, Bengaluru 560043",Ward 22,13.03,77.65,trauma
+Sparsh Hospital,400,"36/1, 3rd Floor, Above SBI, Infantry Road, Shivajinagar, Bengaluru 560001",Ward 75,12.9854,77.6059,clinic
+Rainbow Children's Hospital,200,"153, Infantry Road, Shivajinagar, Bengaluru 560001",Ward 75,12.9819,77.6008,pediatric
+Aster RV Hospital,350,"No. 8/1, 17th Main Road, JP Nagar, Phase 1, Bengaluru 560078",Ward 177,12.9079,77.5651,private
+Narayana Multispeciality Hospital,800,"#258/A, Bommasandra Industrial Area, Anekal Taluk, Bengaluru 560099",Ward 47,12.8,77.7,multi_specialty
+Columbia Asia Hospital (Yeshwanthpur),120,"No. 4, 1st Floor, 4/1, West of Chord Road, Basaveshwara Nagar, Bengaluru 560079",Ward 95,12.9978,77.5385,private
+Sagar Hospital (Kumaraswamy Layout),300,"44/54, 30th Cross, Tilaknagar, Kumaraswamy Layout, Bengaluru 560078",Ward 177,12.908249999999999,77.56545,private
+The Bangalore Hospital,300,"202, Rashtriya Vidyalaya Road, Basavanagudi, Bengaluru 560004",Ward 125,12.9408,77.5734,private
+K C General Hospital,500,"Malleshwaram, Bengaluru, Karnataka 560003",Ward 70,12.99563,77.56945,public

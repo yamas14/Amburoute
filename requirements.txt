@@ -4,6 +4,8 @@ uvicorn[standard]
 pandas
 requests
 python-dotenv
+pydantic>=1.10.0
+geopy>=2.3.0
 
 # AI/ML Dependencies
 torch

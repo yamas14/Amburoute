@@ -1,6 +1,6 @@
 mapboxgl.accessToken = 'pk.eyJ1Ijoic2F0cmFqaXRoIiwiYSI6ImNtZjVpMTRlaTA1ZTIya3M4bjZjb2U5Z2cifQ.7GFkmIE8LP75DkaSzm8UVA';
 
-const API_BASE_URL = 'http://localhost:8002';
+const API_BASE_URL = 'http://localhost:8001';
 const AMBULANCE_START_LOCATION = [12.9716, 77.5946]; // Fixed start for demo
 // Per-route traffic factors for the current simulation run
 let trafficFactors = {}; // { [hospitalId]: factor }

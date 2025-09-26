@@ -1,0 +1,11 @@
+{
+  "watch": [
+    "backend/",
+    "frontend/"
+  ],
+  "ext": "py,js,html,css,json",
+  "ignore": [
+    "node_modules/",
+    ".git/"
+  ]
+}

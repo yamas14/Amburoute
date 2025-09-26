@@ -1,0 +1,15 @@
+{
+  "name": "amburoute",
+  "version": "1.0.0",
+  "description": "AmbuRoute - Emergency Hospital Routing System",
+  "main": "index.js",
+  "scripts": {
+    "start:backend": "nodemon --exec ./venv/bin/python -m uvicorn backend.main:app --port 8001 --reload",
+    "start:frontend": "cd frontend && python -m http.server 3001",
+    "dev": "echo '🚀 Starting AmbuRoute development servers...\n----------------------------------------\n🌐 Frontend: http://localhost:3001/index.html\n🚀 Backend API: http://localhost:8001\n----------------------------------------' && concurrently -n 'BACKEND,FRONTEND' -c 'blue.bold,green.bold' \"npm run start:backend\" \"npm run start:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.10"
+  }
+}
