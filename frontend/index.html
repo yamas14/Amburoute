@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AmbuRoute - Smart Ambulance Routing</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.1">
 </head>
 <body>
     <div id="map"></div>
@@ -18,12 +18,20 @@
             <p><strong>Available Beds:</strong> <span id="hospital-beds">N/A</span></p>
             <p><strong>Available ICU Beds:</strong> <span id="hospital-icu-beds">N/A</span></p>
             <p><strong>Hospitals Loaded:</strong> <span id="hospital-count">0</span></p>
+            <p id="traffic-info" style="display: none; color: #007bff; font-weight: bold;"></p>
         </div>
         <div id="hospital-list-panel">
             <h3>Hospitals</h3>
             <div id="hospital-list" style="max-height: 220px; overflow: auto; border: 1px solid #ddd; padding: 6px; background: #fff;">
                 <!-- Populated by main.js -->
             </div>
+        </div>
+        <div id="traffic-control">
+            <h3>Traffic</h3>
+            <button id="toggle-traffic">Hide Traffic Layer</button>
+            <p style="font-size: 11px; margin: 5px 0; color: #666;">
+                🟢 Low 🟡 Moderate 🟠 Heavy 🔴 Severe
+            </p>
         </div>
         <button id="start-emergency">Start Emergency</button>
     </div>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Traffic Accuracy Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+        .result { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .real-time { color: #007bff; font-weight: bold; }
+        .typical { color: #6c757d; }
+        .difference { color: #28a745; font-weight: bold; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🚦 Mapbox Traffic Accuracy Test</h1>
+    
+    <div class="test-section">
+        <h3>Test Locations</h3>
+        <button onclick="testBangalore()">Test Bangalore (Limited Coverage)</button>
+        <button onclick="testNewYork()">Test New York (Good Coverage)</button>
+        <button onclick="testLondon()">Test London (Good Coverage)</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Results</h3>
+        <div id="results">Click a button above to test traffic accuracy...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Understanding the Data</h3>
+        <ul>
+            <li><span class="real-time">Real-time duration</span>: Current traffic conditions</li>
+            <li><span class="typical">Typical duration</span>: Historical average traffic</li>
+            <li><span class="difference">Difference</span>: How current traffic compares to normal</li>
+        </ul>
+        <p><strong>Note:</strong> Traffic data updates every 5-15 minutes. Coverage varies by location.</p>
+    </div>
+
+    <script>
+        const token = 'pk.eyJ1Ijoic2F0cmFqaXRoIiwiYSI6ImNtZjVpMTRlaTA1ZTIya3M4bjZjb2U5Z2cifQ.7GFkmIE8LP75DkaSzm8UVA';
+        
+        async function testRoute(name, start, end) {
+            const results = document.getElementById('results');
+            results.innerHTML = `<div class="result">Testing ${name}...</div>`;
+            
+            try {
+                const response = await fetch(`https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${start};${end}?access_token=${token}`);
+                const data = await response.json();
+                
+                if (data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    const realTime = route.duration;
+                    const typical = route.duration_typical || realTime;
+                    const distance = route.distance;
+                    const difference = ((realTime - typical) / typical * 100).toFixed(1);
+                    
+                    results.innerHTML = `
+                        <div class="result">
+                            <h4>${name}</h4>
+                            <p><span class="real-time">Real-time: ${(realTime/60).toFixed(1)} min</span></p>
+                            <p><span class="typical">Typical: ${(typical/60).toFixed(1)} min</span></p>
+                            <p><span class="difference">Difference: ${difference}%</span></p>
+                            <p>Distance: ${(distance/1000).toFixed(1)} km</p>
+                            <p><small>UUID: ${data.uuid}</small></p>
+                            <p><strong>Status: ${difference > 5 ? '🔴 Heavy Traffic' : difference < -5 ? '🟢 Light Traffic' : '🟡 Normal'}</strong></p>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `<div class="result">No route data available for ${name}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="result">Error testing ${name}: ${error.message}</div>`;
+            }
+        }
+        
+        function testBangalore() {
+            testRoute('Bangalore', '77.5946,12.9716', '77.573,12.961');
+        }
+        
+        function testNewYork() {
+            testRoute('New York', '-74.0060,40.7128', '-73.9352,40.7304');
+        }
+        
+        function testLondon() {
+            testRoute('London', '-0.1278,51.5074', '-0.0877,51.5081');
+        }
+    </script>
+</body>
+</html>

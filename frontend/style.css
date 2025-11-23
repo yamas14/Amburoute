@@ -71,3 +71,39 @@ button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
+
+#traffic-control {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    display: block !important;
+    visibility: visible !important;
+    background: #e3f2fd !important;
+    padding: 15px !important;
+    border-radius: 8px !important;
+    margin-bottom: 15px !important;
+    border: 3px solid #007bff !important;
+}
+
+#traffic-control h3 {
+    font-size: 16px;
+    margin: 0 0 10px 0;
+    color: #555;
+}
+
+#toggle-traffic {
+    background-image: linear-gradient(to right, #007bff, #0056b3);
+    margin-top: 10px;
+    padding: 12px;
+    font-size: 14px;
+    display: block !important;
+    visibility: visible !important;
+    z-index: 1000 !important;
+    width: 100%;
+    border: 2px solid #0056b3;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+}
+
+#toggle-traffic:hover {
+    background-image: linear-gradient(to right, #0056b3, #004085);
+}

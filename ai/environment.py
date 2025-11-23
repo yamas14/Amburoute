@@ -123,6 +123,11 @@ class AmbulanceEnv(gym.Env):
             print("New route to " + hospital['name'] + " with " + str(len(self.current_route.coordinates)) + " points, "
                   "distance: " + str(self.current_route.distance/1000) + " km, "
                   "duration: " + str(self.current_route.duration/60) + " min")
+            
+            # Add traffic information if available
+            if self.current_route.traffic_data:
+                traffic_factor = self.current_route.traffic_data.get('traffic_factor', 1.0)
+                print(f"Traffic factor: {traffic_factor:.2f}x (real-time traffic considered)")
         
         # Move along the route
         new_pos, new_idx, target_reached = self._move_along_route(

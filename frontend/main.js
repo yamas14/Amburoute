@@ -59,6 +59,7 @@ function getTrafficFactorFor(hospitalId) {
 
 // --- Data Fetching and Simulation ---
 async function startSimulation() {
+    console.log('Starting simulation...');
     try {
         // 0. Reset traffic factors so each run gets fresh, per-route traffic
         trafficFactors = {};
@@ -211,18 +212,27 @@ async function displayAllRoutes(bestHospital) {
     // Filter out any routes missing geometry
     allRoutes = allRoutes.filter(r => r && r.geometry && r.geometry.coordinates && r.geometry.coordinates.length > 1);
 
-    // Compute adjusted durations based on current randomized trafficMultiplier
     if (allRoutes.length === 0) {
         alert('No routes available from the API. Please try again.');
         return { selectedHospital: bestHospital || hospitals[0], selectedRoute: null, selectedRouteAdjustedDuration: null, selectedTrafficFactor: 1.0 };
     }
 
+    // Use real traffic data if available, otherwise fallback to simulated traffic
     const withAdjusted = allRoutes.map(r => {
-        const factor = getTrafficFactorFor(r.hospitalId);
+        let trafficFactor = 1.0;
+        if (r.traffic_data && r.traffic_data.traffic_factor) {
+            // Use real traffic factor from Mapbox
+            trafficFactor = r.traffic_data.traffic_factor;
+            console.log(`Hospital ${r.hospitalId}: Real traffic factor ${trafficFactor.toFixed(2)}x`);
+        } else {
+            // Fallback to simulated traffic factor
+            trafficFactor = getTrafficFactorFor(r.hospitalId);
+            console.log(`Hospital ${r.hospitalId}: Simulated traffic factor ${trafficFactor.toFixed(2)}x`);
+        }
         return {
             ...r,
-            trafficFactor: factor,
-            adjustedDuration: (r.duration || r.duration_typical || 900) * factor
+            trafficFactor: trafficFactor,
+            adjustedDuration: (r.duration || r.duration_typical || 900) * trafficFactor
         };
     });
 
@@ -230,8 +240,10 @@ async function displayAllRoutes(bestHospital) {
     withAdjusted.sort((a, b) => a.adjustedDuration - b.adjustedDuration);
     const bestRoute = withAdjusted[0];
     const otherRoutes = withAdjusted.slice(1);
+    
+    console.log(`Best route: Hospital ${bestRoute.hospitalId}, Traffic: ${bestRoute.trafficFactor.toFixed(2)}x, Duration: ${(bestRoute.adjustedDuration/60).toFixed(1)} min`);
 
-    // Generate traffic from the non-optimal routes, with bias based on their trafficFactor
+    // Generate traffic from the non-optimal routes (visual only)
     generateLineTraffic(otherRoutes.map(r => ({ geometry: r.geometry, trafficFactor: r.trafficFactor })));
 
     // Draw the non-optimal routes in red
@@ -288,10 +300,17 @@ function drawRoute(geometry, color, id) {
 }
 
 function animateAmbulance(routeCoordinates, durationMs = 15000) {
+    if (!ambulanceMarker) {
+        console.error('Ambulance marker not initialized!');
+        return;
+    }
+    
     let startTime = null;
     const duration = durationMs; // scaled by traffic
     const routeLine = turf.lineString(routeCoordinates);
     const totalDistance = turf.length(routeLine);
+    
+    console.log(`Starting ambulance animation: ${routeCoordinates.length} points, ${durationMs}ms`);
 
     const frame = (timestamp) => {
         if (!startTime) startTime = timestamp;
@@ -356,6 +375,21 @@ function updateDashboard(hospital, route) {
     document.getElementById('hospital-eta').textContent = `${minutes} mins`;
     document.getElementById('hospital-beds').textContent = hospital.available_beds;
     document.getElementById('hospital-icu-beds').textContent = hospital.available_icu_beds;
+    
+    // Display traffic information if available
+    if (route && route.traffic_data) {
+        const trafficFactor = route.traffic_data.traffic_factor || 1.0;
+        const trafficInfo = document.getElementById('traffic-info');
+        if (trafficInfo) {
+            const baseMinutes = Math.round(route.traffic_data.base_duration / 60);
+            const trafficMinutes = Math.round(route.traffic_data.traffic_duration / 60);
+            trafficInfo.innerHTML = `
+                🚦 Traffic Factor: ${trafficFactor.toFixed(2)}x<br>
+                ⏱️ Base: ${baseMinutes}min → Traffic: ${trafficMinutes}min
+            `;
+            trafficInfo.style.display = 'block';
+        }
+    }
 }
 
 function generateLineTraffic(routeEntries) {
@@ -438,17 +472,125 @@ function clearMap() {
     // Clear hospitals circle layer
     if (map.getLayer('hospitals-points')) map.removeLayer('hospitals-points');
     if (map.getSource('hospitals-points')) map.removeSource('hospitals-points');
-    // Clear traffic
+    // Clear simulated traffic (but keep real traffic layer)
     if (map.getLayer('traffic')) map.removeLayer('traffic');
     if (map.getSource('traffic')) map.removeSource('traffic');
+    // Note: Don't remove real traffic layer (traffic-layer only)
     // Stop animation
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
 }
 
 // --- Initial Load and Event Listeners ---
-document.getElementById('start-emergency').addEventListener('click', startSimulation);
+let trafficLayerVisible = true;
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, setting up event listeners...');
+    
+    // Set up event listeners
+    const startEmergencyBtn = document.getElementById('start-emergency');
+    const toggleTrafficBtn = document.getElementById('toggle-traffic');
+    
+    if (startEmergencyBtn) {
+        startEmergencyBtn.addEventListener('click', startSimulation);
+        console.log('Start emergency button listener attached');
+    } else {
+        console.error('Start emergency button not found!');
+    }
+    
+    if (toggleTrafficBtn) {
+        toggleTrafficBtn.addEventListener('click', () => {
+            const hasTrafficLayer = map.getLayer('traffic-layer');
+            
+            if (hasTrafficLayer) {
+                if (trafficLayerVisible) {
+                    map.setLayoutProperty('traffic-layer', 'visibility', 'none');
+                    toggleTrafficBtn.textContent = 'Show Traffic Layer';
+                    console.log('Traffic layer hidden');
+                } else {
+                    map.setLayoutProperty('traffic-layer', 'visibility', 'visible');
+                    toggleTrafficBtn.textContent = 'Hide Traffic Layer';
+                    console.log('Traffic layer shown');
+                }
+                trafficLayerVisible = !trafficLayerVisible;
+            } else {
+                console.error('Traffic layer not found!');
+                // Try to add it again
+                addTrafficLayersToMap();
+            }
+        });
+        console.log('Toggle traffic button listener attached');
+    } else {
+        console.error('Toggle traffic button not found!');
+    }
+});
+
+function addTrafficLayersToMap() {
+    if (!map.getSource('mapbox-traffic')) {
+        map.addSource('mapbox-traffic', {
+            type: 'vector',
+            url: 'mapbox://mapbox.mapbox-traffic-v1'
+        });
+    }
+    
+    if (!map.getLayer('traffic-layer')) {
+        map.addLayer({
+            id: 'traffic-layer',
+            type: 'line',
+            source: 'mapbox-traffic',
+            'source-layer': 'traffic',
+            minzoom: 0,
+            paint: {
+                'line-color': [
+                    'case',
+                    ['==', ['get', 'congestion'], 'low'], '#00ff00',
+                    ['==', ['get', 'congestion'], 'moderate'], '#ffff00', 
+                    ['==', ['get', 'congestion'], 'heavy'], '#ff9900',
+                    ['==', ['get', 'congestion'], 'severe'], '#ff0000',
+                    '#ff0000'
+                ],
+                'line-width': 8,
+                'line-opacity': 0.9,
+                'line-blur': 0
+            }
+        });
+    }
+    
+    console.log('Traffic layer re-added successfully');
+}
 
 map.on('load', () => {
+    console.log('Map loaded, adding traffic layer...');
+    
+    // Add Mapbox Traffic Layer (real-time traffic data)
+    map.addSource('mapbox-traffic', {
+        type: 'vector',
+        url: 'mapbox://mapbox.mapbox-traffic-v1'
+    });
+    
+    // Add traffic layer for live traffic visualization - ONLY LINES
+    map.addLayer({
+        id: 'traffic-layer',
+        type: 'line',
+        source: 'mapbox-traffic',
+        'source-layer': 'traffic',
+        minzoom: 0,
+        paint: {
+            'line-color': [
+                'case',
+                ['==', ['get', 'congestion'], 'low'], '#00ff00',
+                ['==', ['get', 'congestion'], 'moderate'], '#ffff00', 
+                ['==', ['get', 'congestion'], 'heavy'], '#ff9900',
+                ['==', ['get', 'congestion'], 'severe'], '#ff0000',
+                '#ff0000' // Default to red for visibility
+            ],
+            'line-width': 8,
+            'line-opacity': 0.9,
+            'line-blur': 0
+        }
+    });
+    
+    console.log('Traffic layer added successfully');
+    
     // Add a fixed ambulance marker at the start
     const el = document.createElement('div');
     el.className = 'ambulance-marker';

@@ -16,6 +16,9 @@ def get_route_from_mapbox(start_coords: Tuple[float, float], end_coords: Tuple[f
     
     params = {
         'geometries': 'geojson',
+        'annotations': 'congestion,duration,speed',
+        'overview': 'full',
+        'steps': 'true',
         'access_token': MAPBOX_ACCESS_TOKEN
     }
     
@@ -27,4 +30,25 @@ def get_route_from_mapbox(start_coords: Tuple[float, float], end_coords: Tuple[f
         raise ValueError("No route found by Mapbox API.")
         
     # We only need the first, most optimal route
-    return data['routes'][0]
+    route = data['routes'][0]
+    
+    # Add traffic data to the response
+    route['traffic_data'] = {
+        'traffic_duration': route.get('duration', 0),
+        'base_duration': route.get('duration_typical', route.get('duration', 0)),
+        'traffic_factor': 1.0
+    }
+    
+    # Calculate traffic factor
+    if route['traffic_data']['base_duration'] > 0:
+        route['traffic_data']['traffic_factor'] = route['traffic_data']['traffic_duration'] / route['traffic_data']['base_duration']
+    
+    # Extract congestion data if available
+    if 'legs' in route and len(route['legs']) > 0:
+        leg = route['legs'][0]
+        if 'annotation' in leg:
+            annotation = leg['annotation']
+            route['traffic_data']['congestion'] = annotation.get('congestion', [])
+            route['traffic_data']['speeds'] = annotation.get('speed', [])
+    
+    return route
